@@ -13,7 +13,14 @@
     <script>
 
         var url = 'gc.jpg';
+        var url = 'http://www.chinesemedicineliving.com/blog/wp-content/uploads/2015/05/watermelon.jpg';
 //        var url = 'http://cdn1.medicalnewstoday.com/content/images/articles/266/266886/watermelon.jpg';
+
+        var cross_origin = true;
+        if (cross_origin) {
+            url = 'http://crossorigin.me/' + url;
+        }
+
         $(document).ready(loadImage(url));
 
         function loadImage(url) {
