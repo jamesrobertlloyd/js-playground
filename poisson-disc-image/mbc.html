@@ -12,9 +12,9 @@
     <script src="../common/jquery-1.11.3.min.js"></script>
     <script>
 
-//        loadImage('gc.jpg');
-        $(document).ready(
-                loadImage('http://cdn1.medicalnewstoday.com/content/images/articles/266/266886/watermelon.jpg'));
+        var url = 'gc.jpg';
+//        var url = 'http://cdn1.medicalnewstoday.com/content/images/articles/266/266886/watermelon.jpg';
+        $(document).ready(loadImage(url));
 
         function loadImage(url) {
             // Create an offscreen canvas
