@@ -16,9 +16,10 @@
             </label>
         </form>
     </div>
-    <script src="../common/d3.js"></script>
-    <script src="../common/jquery-1.11.3.min.js"></script>
-    <script src="../common/FileSaver.min.js"></script>
+    <!--<script src="../common/d3.js"></script>-->
+    <!--<script src="../common/jquery-1.11.3.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script>
 
         function url_entry(){
@@ -165,15 +166,15 @@
         }
 
         function circleSetup (img, context) {
-            var maxRadius = img.width / 100, // maximum radius of circle
+            var maxRadius = Math.min(img.width, img.height) / 100, // maximum radius of circle
 //            var maxRadius = img.width / 10, // maximum radius of circle
                 padding = 1, // padding between circles; also minimum radius
                 margin = {top: 0, right: 0, bottom: 0, left: 0},
                 width = img.width - margin.left - margin.right,
                 height = img.height - margin.top - margin.bottom;
 
-            var k = 10, // initial number of candidates to consider per circle
-                m = 10, // initial number of circles to add per frame
+            var k = 5, // initial number of candidates to consider per circle
+                m = 5, // initial number of circles to add per frame
                 n = 100000, // remaining number of circles to add
                 newCircle = bestCircleGenerator(maxRadius, padding);
 
