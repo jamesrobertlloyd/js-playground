@@ -2,20 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bubbles!</title>
+    <title>Unintended Pointillism</title>
     <link rel="stylesheet" href="center.css" />
 </head>
 <body>
     <div class="container" id="container">
-        <svg id="central-svg" width="100%" height="100%" class="container"></svg>
+        <div class="container" id="svg-container">
+            <svg id="central-svg" width="100%" height="100%" class="container"></svg>
+        </div>
         <form action="#" onsubmit="url_entry()" id="url_entry_form" class="container">
             <label>
-                <input type="text" id="url-input" class="container"/>
+                <input type="text" id="url-input" class="container" placeholder="Enter an image URL"/>
             </label>
         </form>
     </div>
     <script src="../common/d3.js"></script>
     <script src="../common/jquery-1.11.3.min.js"></script>
+    <script src="../common/FileSaver.min.js"></script>
     <script>
 
         function url_entry(){
@@ -57,6 +60,8 @@
             var img = new Image();
             img.crossOrigin = "Anonymous";
             img.onload = function() {
+                var width = img.width;
+                var height = img.height;
                 canvas.width = img.width;
                 canvas.height = img.height;
                 context.drawImage(img, 0, 0, img.width, img.height);
@@ -64,13 +69,68 @@
                 var tick = circleSetup(img, context);
 //                setInterval(tick, 50);
                 d3.timer(tick);
+
+                // Allow clicking to save
+                document.body.onclick = function () {
+                    var html = d3.select("#central-svg")
+                            .attr("version", 1.1)
+                            .attr("xmlns", "http://www.w3.org/2000/svg")
+                            .node().parentNode.innerHTML;
+                    var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
+                    var img = '<img src="'+imgsrc+'">';
+
+//                    d3.select("#svgdataurl").html(img);
+
+                    var canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    var context = canvas.getContext("2d");
+
+                    var image = new Image;
+                    image.onload = function() {
+                        context.drawImage(image, 0, 0);
+
+                        //save and serve it as an actual filename
+                        binaryblob(canvas);
+
+                        var a = document.createElement("a");
+                        a.download = "pointillism.png";
+                        a.href = canvas.toDataURL("image/png");
+
+                        var pngimg = '<img src="'+a.href+'">';
+//                        d3.select("#pngdataurl").html(pngimg);
+
+                        a.click();
+                    };
+                    image.src = imgsrc;
+
+                    function binaryblob (canvas) {
+                        var byteString = atob(canvas.toDataURL().replace(/^data:image\/(png|jpg);base64,/, "")); //wtf is atob?? https://developer.mozilla.org/en-US/docs/Web/API/Window.atob
+                        var ab = new ArrayBuffer(byteString.length);
+                        var ia = new Uint8Array(ab);
+                        for (var i = 0; i < byteString.length; i++) {
+                            ia[i] = byteString.charCodeAt(i);
+                        }
+                        var dataView = new DataView(ab);
+                        var blob = new Blob([dataView], {type: "image/png"});
+                        var DOMURL = self.URL || self.webkitURL || self;
+                        var newurl = DOMURL.createObjectURL(blob);
+
+                        var img = '<img src="'+newurl+'">';
+//                      d3.select("#img").html(img);
+                    }
+
+                };
+
             };
 
             // Load image
             img.src = url;
         }
 
-        function getAverageRGB(img, context) {
+        function getAverageRGB(img, context, gamma) {
+
+            gamma = gamma || 2;
 
             var blockSize = 5, // only visit every 5 pixels
                 defaultRGB = {r:0,g:0,b:0}, // for non-supporting envs
@@ -90,15 +150,15 @@
 
             while ( (i += blockSize * 4) < length ) {
                 ++count;
-                rgb.r += data.data[i];
-                rgb.g += data.data[i+1];
-                rgb.b += data.data[i+2];
+                rgb.r += Math.pow(data.data[i], gamma);
+                rgb.g += Math.pow(data.data[i+1], gamma);
+                rgb.b += Math.pow(data.data[i+2], gamma);
             }
 
             // ~~ used to floor values
-            rgb.r = ~~(rgb.r/count);
-            rgb.g = ~~(rgb.g/count);
-            rgb.b = ~~(rgb.b/count);
+            rgb.r = ~~(Math.pow(rgb.r/count, 1 / gamma));
+            rgb.g = ~~(Math.pow(rgb.g/count, 1 / gamma));
+            rgb.b = ~~(Math.pow(rgb.b/count, 1 / gamma));
 
             return rgb;
 
@@ -127,8 +187,22 @@
 
             var rgb = getAverageRGB(img, context);
 
-            d3.select('#container').style("background-color", "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")");
-            document.body.style.backgroundColor = "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")";
+            d3.select('#container')
+                    .transition()
+                    .style("background-color", "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")")
+                    .duration(10000);
+
+            svg.append("rect")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", img.width)
+                    .attr("height", img.height)
+                    .attr("fill", 'black')
+                    .transition()
+                    .style("fill", "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")")
+                    .duration(10000);;
+
+//            document.body.style.backgroundColor = "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")";
 
             function tick() {
               for (var i = 0; i < m && --n >= 0; ++i) {
